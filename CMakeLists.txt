@@ -22,7 +22,6 @@ find_package(rclcpp_components REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(distance_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 
@@ -68,7 +67,6 @@ ament_target_dependencies(loco_platoon_estimator
   rclcpp
   geometry_msgs
   nav_msgs
-  distance_msgs
 )
 rosidl_target_interfaces(loco_platoon_estimator ${PROJECT_NAME} rosidl_typesupport_cpp)
 
@@ -86,7 +84,6 @@ ament_target_dependencies(loco_platoon_node
   rcl_interfaces
   geometry_msgs
   nav_msgs
-  distance_msgs
 )
 target_link_libraries(loco_platoon_node
   loco_platoon_estimator
@@ -151,7 +148,6 @@ ament_target_dependencies(loco_platoon_estimator_test
   rclcpp
   geometry_msgs
   nav_msgs
-  distance_msgs
 )
 target_link_libraries(loco_platoon_estimator_test
   loco_platoon_estimator
@@ -213,7 +209,6 @@ ament_export_dependencies(
   rcl_interfaces
   geometry_msgs
   nav_msgs
-  distance_msgs
 )
 
 ament_export_libraries(
