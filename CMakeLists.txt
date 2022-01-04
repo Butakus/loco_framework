@@ -29,7 +29,8 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   msg/PlatoonDetection.msg
   msg/PlatoonDetectionArray.msg
-  DEPENDENCIES std_msgs
+  msg/DetectionArray.msg
+  DEPENDENCIES std_msgs geometry_msgs
 )
 
 # Add OdometryBuffer target library

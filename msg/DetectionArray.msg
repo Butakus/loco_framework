@@ -2,4 +2,4 @@
 std_msgs/Header header
 
 # List of detections
-loco_framework/PlatoonDetection[] detections
+geometry_msgs/PoseWithCovarianceStamped[] detections
