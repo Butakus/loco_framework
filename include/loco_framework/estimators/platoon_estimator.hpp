@@ -14,8 +14,6 @@
 #include <functional>
 
 #include <rclcpp/time.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
-#include <nav_msgs/msg/odometry.hpp>
 
 #include <loco_framework/msg/platoon_detection.hpp>
 #include <loco_framework/utils.hpp>
@@ -26,8 +24,6 @@ namespace loco
 namespace platoon
 {
 
-using Odometry = nav_msgs::msg::Odometry;
-using OdometryPtr = nav_msgs::msg::Odometry::SharedPtr;
 using PlatoonDetection = loco_framework::msg::PlatoonDetection;
 using PlatoonDetectionPtr = loco_framework::msg::PlatoonDetection::SharedPtr;
 
@@ -117,7 +113,6 @@ public:
 
 protected:
     std::vector<Particle> population_;
-    // std::vector<Odometry> odometry_;
     std::vector<double> weights_;
     size_t population_size_;
     size_t number_of_vehicles_;
