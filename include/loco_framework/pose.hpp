@@ -44,7 +44,9 @@ public:
 
     // Getters and setters
     inline Eigen::Matrix<double, 3, 3> se2() const { return this->data_; }
+    inline double& x() { return this->data_(0, 2); }
     inline double x() const { return this->data_(0, 2); }
+    inline double& y() { return this->data_(1, 2); }
     inline double y() const { return this->data_(1, 2); }
     inline double angle() const { return std::atan2(this->data_(1, 0), this->data_(0, 0)); }
     std::tuple<double, double> translation() const;
@@ -56,6 +58,7 @@ public:
     // Composition operators
     PoseSE2& operator+=(const PoseSE2& other_pose);
     PoseSE2& operator-=(const PoseSE2& other_pose);
+    PoseSE2 inverse() const;
     static PoseSE2 relative(const PoseSE2& pose_1, const PoseSE2& pose_2);
 
     // String representation
@@ -90,6 +93,8 @@ public:
     explicit NoisyPoseSE2(const PoseCovMsg& pose_msg);
     NoisyPoseSE2(const PoseSE2& pose_se2);
     NoisyPoseSE2(const PoseSE2& pose_se2, const Eigen::Matrix<double, 3, 3>& covariance);
+    NoisyPoseSE2(const Eigen::Matrix<double, 3, 3>& se2_matrix,
+                 const Eigen::Matrix<double, 3, 3>& covariance);
     NoisyPoseSE2(const NoisyPoseSE2& other_pose);
 
     // Copy assignment operator
@@ -103,9 +108,11 @@ public:
     // Composition operators
     NoisyPoseSE2& operator+=(const NoisyPoseSE2& other_pose);
     NoisyPoseSE2& operator-=(const NoisyPoseSE2& other_pose);
+    NoisyPoseSE2 inverse() const;
     static NoisyPoseSE2 relative(const NoisyPoseSE2& pose_1, const NoisyPoseSE2& pose_2);
 
     // Random sampling
+    inline Eigen::Matrix<double, 3, 3> mvn_sample_transform() const { return this->mvn_sample_transform_; }
     NoisyPoseSE2 sample_mvn(std::mt19937& rng) const;
 
     // String representation with covariance matrix
@@ -129,8 +136,6 @@ protected:
 /* Binary composition operators for NoisyPoseSE2 */
 NoisyPoseSE2 operator+(NoisyPoseSE2 pose_1, const NoisyPoseSE2& pose_2);
 NoisyPoseSE2 operator-(NoisyPoseSE2 pose_1, const NoisyPoseSE2& pose_2);
-// std::ostream& operator<<(std::ostream& os, const NoisyPoseSE2& pose);
-
 
 
 /*** Utility functions ***/
@@ -167,13 +172,23 @@ constexpr double deg_to_rad(const T& deg) {return (M_PI * deg / 180.0);}
 template<typename T>
 constexpr double rad_to_deg(const T& rad) {return (180.0 * rad / M_PI);}
 
-/* Angle normalization to [0-360] range */
+/* Angle normalization to [0, 2pi] range */
 template<typename T>
-T norm_angle(const T& angle)
+T norm_angle_2pi(T angle)
 {
+    // Wrap angle to [-2pi, 2pi] range
+    angle = fmod(angle, deg_to_rad(360));
+    // Make it positive
     return angle < 0 ? angle + deg_to_rad(360) : angle;
 }
 
+/* Angle normalization to [-pi, pi] range */
+template<typename T>
+T norm_angle(T angle)
+{
+    const double angle_2pi = norm_angle_2pi(angle + deg_to_rad(180));
+    return angle_2pi - deg_to_rad(180);
+}
 
 
 } // Namespace loco

@@ -26,6 +26,7 @@ find_package(tf2 REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(MRPT 2 COMPONENTS poses)
 
 # Add vehicle detection msgs
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -243,6 +244,25 @@ target_link_libraries(loco_estimator_test
   loco_estimator
 )
 
+# Add MRPT pose test target
+add_executable(mrpt_pose_test
+  test/mrpt_pose_test.cpp
+)
+target_include_directories(mrpt_pose_test PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(mrpt_pose_test
+  rclcpp
+  geometry_msgs
+  nav_msgs
+)
+target_link_libraries(mrpt_pose_test
+  pose
+  loco_estimator
+  ${MRPT_LIBRARIES}
+)
+
 # Install library targets
 install(TARGETS
   pose
@@ -266,6 +286,7 @@ install(TARGETS
   loco_estimator_test
   odometry_buffer_test
   hungarian_test
+  mrpt_pose_test
   DESTINATION lib/${PROJECT_NAME}
 )
 
