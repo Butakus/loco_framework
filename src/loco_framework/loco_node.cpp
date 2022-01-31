@@ -91,14 +91,14 @@ void LocoNode::init()
     this->odometry_mutexes_.swap(temp_odometry_mutexes);
 
     // Publishers
-    std::vector<rclcpp::Publisher<PoseStamped>::SharedPtr> estimation_pubs_;
+    std::vector<rclcpp::Publisher<PoseCovStamped>::SharedPtr> estimation_pubs_;
     for (std::size_t i = 0; i < this->number_of_vehicles_; ++i)
     {
         // Get agent namespace from odmetry topic
         std::string agent_ns = extract_ns(odom_topics[i]);
         std::string estimation_topic = "~/" + agent_ns + "pose";
-        this->estimation_pubs_.push_back(this->create_publisher<PoseStamped>(estimation_topic,
-                                                                             rclcpp::SensorDataQoS()));
+        this->estimation_pubs_.push_back(this->create_publisher<PoseCovStamped>(estimation_topic,
+                                                                                rclcpp::SensorDataQoS()));
     }
 
     // Subscribers
@@ -327,12 +327,24 @@ void LocoNode::build_detection_matrix(std::vector<std::vector<NoisyPoseSE2> >& d
                     /// TODO Not implemented
                     /** Calculate the distance between the two SE3 poses
                      * Options:
-                     *  1. Weighted translation (m) + rotation (rad) error
-                     *  2. Unitless Frobenius norm of SE3 transformation matrix
+                     *  1. Translation error only (m)
+                     *  2. Weighted translation (m) + rotation (rad) error
+                     *  3. Unitless Frobenius norm of SE3 transformation matrix
                     */
+                    NoisyPoseSE2 virtual_detected = this->estimation_[i] + NoisyPoseSE2(this->vehicle_detections_[i].detections[k].pose);
+                    NoisyPoseSE2 detection_error = this->estimation_[j] - virtual_detected;
 
-                    // double detected_j = this->estimation_[i].x + this->vehicle_detections_[i].detections[k].distance;
-                    // cost_matrix[k][j] = std::abs(this->estimation_[j].x - detected_j);
+                    // Option 1
+                    cost_matrix[k][j] = std::hypot(detection_error.x(), detection_error.y());
+
+                    // Option 2
+                    // double trans_error = std::hypot(detection_error.x(), detection_error.y());
+                    // const double trans_weight = 1.0;
+                    // const double angle_weight = 2.0;
+                    // cost_matrix[k][j] = trans_weight * trans_error + angle_weight * detection_error.angle();
+
+                    // Option 3
+                    // cost_matrix[k][j] = detection_error.se2().norm();
                 }
             }
         }
@@ -363,14 +375,12 @@ void LocoNode::publish_estimation()
         estimation_lock.lock();
         for (size_t i = 0; i < this->number_of_vehicles_; i++)
         {
-            // Convert NoisyState object to a Pose msg
-            PoseStamped::UniquePtr pose = std::make_unique<PoseStamped>();
-
-            /// TODO: Not implemented
+            // Convert NoisyState object to a PoseWithCovarianceStamped msg
+            PoseCovStamped::UniquePtr pose = std::make_unique<PoseCovStamped>();
+            pose->pose = this->estimation_[i].toPoseCovMsg();
 
             pose->header.stamp = this->estimation_time_;
-            // pose->header.frame_id = "map";
-            // pose->pose.position.x = this->estimation_[i].x;
+            pose->header.frame_id = "map";
             this->estimation_pubs_[i]->publish(std::move(pose));
         }
         estimation_lock.unlock();

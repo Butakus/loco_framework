@@ -26,7 +26,7 @@ find_package(tf2 REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-find_package(MRPT 2 COMPONENTS poses)
+find_package(MRPT 2 QUIET COMPONENTS poses)
 
 # Add vehicle detection msgs
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -35,6 +35,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/DetectionArray.msg
   DEPENDENCIES std_msgs geometry_msgs
 )
+
+# List of executable targets
+set(LOCO__EXEC_TARGETS "")
 
 # Add Pose target library
 add_library(pose SHARED
@@ -166,6 +169,7 @@ ament_target_dependencies(loco_platoon
 target_link_libraries(loco_platoon
   loco_platoon_node
 )
+list(APPEND LOCO__EXEC_TARGETS loco_platoon)
 
 # Add loco_platoon_node executable target
 add_executable(loco
@@ -181,6 +185,7 @@ ament_target_dependencies(loco
 target_link_libraries(loco
   loco_node
 )
+list(APPEND LOCO__EXEC_TARGETS loco)
 
 # Add OdometryBuffer test target
 add_executable(odometry_buffer_test
@@ -197,6 +202,7 @@ ament_target_dependencies(odometry_buffer_test
 target_link_libraries(odometry_buffer_test
   odometry_buffer
 )
+list(APPEND LOCO__EXEC_TARGETS odometry_buffer_test)
 
 # Add Hungarian test target
 add_executable(hungarian_test
@@ -209,6 +215,7 @@ target_include_directories(hungarian_test PUBLIC
 target_link_libraries(hungarian_test
   hungarian
 )
+list(APPEND LOCO__EXEC_TARGETS hungarian_test)
 
 # Add PlatoonEstimator test target
 add_executable(loco_platoon_estimator_test
@@ -226,6 +233,7 @@ ament_target_dependencies(loco_platoon_estimator_test
 target_link_libraries(loco_platoon_estimator_test
   loco_platoon_estimator
 )
+list(APPEND LOCO__EXEC_TARGETS loco_platoon_estimator_test)
 
 # Add LocoEstimator test target
 add_executable(loco_estimator_test
@@ -243,25 +251,32 @@ ament_target_dependencies(loco_estimator_test
 target_link_libraries(loco_estimator_test
   loco_estimator
 )
+list(APPEND LOCO__EXEC_TARGETS loco_estimator_test)
 
 # Add MRPT pose test target
-add_executable(mrpt_pose_test
-  test/mrpt_pose_test.cpp
-)
-target_include_directories(mrpt_pose_test PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-ament_target_dependencies(mrpt_pose_test
-  rclcpp
-  geometry_msgs
-  nav_msgs
-)
-target_link_libraries(mrpt_pose_test
-  pose
-  loco_estimator
-  ${MRPT_LIBRARIES}
-)
+if (MRPT_FOUND)
+  message(STATUS "Found MRPT: ${MRPT_INCLUDE_DIRS}")
+  add_executable(mrpt_pose_test
+    test/mrpt_pose_test.cpp
+  )
+  target_include_directories(mrpt_pose_test PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+  )
+  ament_target_dependencies(mrpt_pose_test
+    rclcpp
+    geometry_msgs
+    nav_msgs
+  )
+  target_link_libraries(mrpt_pose_test
+    pose
+    loco_estimator
+    ${MRPT_LIBRARIES}
+  )
+  list(APPEND LOCO__EXEC_TARGETS mrpt_pose_test)
+else()
+  message(STATUS "MRPT not found")
+endif()
 
 # Install library targets
 install(TARGETS
@@ -280,13 +295,7 @@ install(TARGETS
 
 # Install executable targets
 install(TARGETS
-  loco_platoon
-  loco
-  loco_platoon_estimator_test
-  loco_estimator_test
-  odometry_buffer_test
-  hungarian_test
-  mrpt_pose_test
+  ${LOCO__EXEC_TARGETS}
   DESTINATION lib/${PROJECT_NAME}
 )
 

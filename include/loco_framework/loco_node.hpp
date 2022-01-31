@@ -8,7 +8,6 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rcl_interfaces/msg/parameter_descriptor.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
@@ -24,7 +23,7 @@ class LocoNode : public rclcpp::Node
 {
 public:
     using Pose = geometry_msgs::msg::Pose;
-    using PoseStamped = geometry_msgs::msg::PoseStamped;
+    using PoseCovStamped = geometry_msgs::msg::PoseWithCovarianceStamped;
     using Odometry = nav_msgs::msg::Odometry;
     using DetectionArray = loco_framework::msg::DetectionArray;
 
@@ -71,7 +70,7 @@ protected:
     std::thread publisher_thread_;
 
     // Publishers
-    std::vector<rclcpp::Publisher<PoseStamped>::SharedPtr> estimation_pubs_;
+    std::vector<rclcpp::Publisher<PoseCovStamped>::SharedPtr> estimation_pubs_;
 
     // Subscribers
     std::vector<rclcpp::Subscription<Odometry>::SharedPtr> odom_subs_;
