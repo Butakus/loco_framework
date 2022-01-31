@@ -278,27 +278,9 @@ void LocoNode::copy_state(
             std::lock_guard<std::mutex>(this->odometry_mutexes_[i]);
 
             // Create NoisyPoseSE2 odometry object
-
-            /// TODO: Not implemented            
-            odometries.emplace_back();
-
-            // Create OdometryDelta object
-            /* OLD Platoon
-            odometries.emplace_back(
-                // Time stamps
-                // this->last_odometries_[i]->header.stamp,
-                // this->odometries_[i]->header.stamp,
-                // Position delta
-                this->odometries_[i].pose.pose.position.x - this->last_odometries_[i].pose.pose.position.x,
-                // Average velocity
-                (this->odometries_[i].twist.twist.linear.x + this->last_odometries_[i].twist.twist.linear.x) / 2.0,
-                // Position and velocity average stddevs
-                // TODO: Make stddev increase with dx (the further we move, the more uncertain).
-                // TODO: This should be done in the odometry node, not here
-                (std::sqrt(this->odometries_[i].pose.covariance[0]) + std::sqrt(this->last_odometries_[i].pose.covariance[0])) / 2.0,
-                (std::sqrt(this->odometries_[i].twist.covariance[0]) + std::sqrt(this->last_odometries_[i].twist.covariance[0])) / 2.0
-            );
-            */
+            NoisyPoseSE2 current_odom(this->odometries_[i].pose);
+            NoisyPoseSE2 last_odom(this->last_odometries_[i].pose);
+            odometries.emplace_back(current_odom - last_odom);
 
             // Save last odometry
             this->last_odometries_[i] = this->odometries_[i];
