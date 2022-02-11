@@ -19,15 +19,14 @@ LocoEstimator::LocoEstimator(size_t population_size,
     this->weights_ = std::vector<double>(population_size);
     this->current_estimation_ = std::vector<NoisyPoseSE2>(number_of_vehicles);
 
-    // Only 20% of the population survives after each iteration
-    // this->winners_size_ = static_cast<size_t>(0.2 * population_size);
+    // Percentage of the population that survives after each iteration
     this->winners_size_ = static_cast<size_t>(winners_size * population_size);
     if (this->winners_size_ == 0)
     {
         std::cout << "WARNING: Population size is too small!";
         this->winners_size_ = 1;
     }
-    // In the selection process, each tournament round will pick a 10% of the population
+    // Percentage of the population that will be picked in each tournament round
     this->tournament_size_ = static_cast<size_t>(tournament_size * population_size);
     if (this->tournament_size_ == 0)
     {
@@ -115,7 +114,7 @@ std::vector<NoisyPoseSE2> LocoEstimator::estimate(const std::vector<NoisyPoseSE2
 
     // Update pose estimation based on new computed weights
     this->update_estimation();
-    std::cout << "Population after likelihood:" << std::endl << this->get_debug_str() << std::endl;
+
     // Perform a standard resample based on particle weights
     // this->resample();
     // Perform a genetic resample (select winner particles and generate offspring based on prior estimation)
@@ -389,11 +388,15 @@ void LocoEstimator::element_mutation(Particle& particle, const std::vector<Noisy
            If the prior is very noisy, the mahalanobis distance will be small. Less likely to mutate, because prior is bad.
            If the prior is very accurate, the mahalanobis distance will be higher. More likely to mutate.
         */
+        // Option 1: Fixed mutation rate
         if (this->uniform_distribution_(this->random_generator_) < this->mutation_rate_)
         {
             // Sample a new position for vehicle i from prior estimation
             particle[i] = prior_estimation[i].sample_mvn(this->random_generator_);
         }
+        // Option 2: Dynamic mutation rate based on prior covariance
+        // double prior_cov_size = prior_estimation[i].covariance().trace();
+        /// TODO
     }
 }
 
